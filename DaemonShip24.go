@@ -10,6 +10,16 @@ import (
 	"time"
 )
 
+const (
+	firstRunPageSize int = 100
+	pageSize         int = 1
+)
+
+type tracker struct {
+	trackingNumber string
+	courierCode    string
+}
+
 func DaemonShip24(pages int) {
 	ticker := time.NewTicker(120 * time.Second)
 	quit := make(chan struct{})
@@ -26,11 +36,25 @@ func DaemonShip24(pages int) {
 	}
 }
 
+func getTrackAndTrace(url string, idpicklist int) string {
+	trackAndTrace, err := b2c.GetTrackAndTrace(url)
+	switch {
+	case err != nil:
+		log.Printf("Failed to get shipments for picklist %d: %v", idpicklist, err)
+		return ""
+	case trackAndTrace == "":
+		log.Printf("Track and Trace not yet available for picklist %d", idpicklist)
+		return ""
+	}
+
+	return trackAndTrace
+}
+
 func AddTrackAndTraceToShip24(pages int) {
 
 	for i := 0; i < pages; i++ {
 
-		offset := i * 100
+		offset := i * pageSize
 		picklists, err := pApi.GetPicklistsByOffset(offset)
 		if err != nil {
 			log.Panic()
@@ -38,37 +62,40 @@ func AddTrackAndTraceToShip24(pages int) {
 
 		for _, picklist := range picklists {
 
-			shipments := pApi.Shipments{}
-			shipments, err = pApi.GetShipments(picklist.Idpicklist)
+			//shipments := pApi.Shipments{}
+			shipments, err := pApi.GetShipments(picklist.Idpicklist)
+			if err != nil {
+				log.Printf("Failed to get picklists: %v", err)
+				break
+			}
 
 			for _, shipment := range shipments {
 
-				trackAndTrace, err := b2c.GetTrackAndTrace(shipment.Tracktraceurl)
-
-				if err != nil || trackAndTrace == "" {
-
+				trackAndTrace := getTrackAndTrace(shipment.Tracktraceurl, picklist.Idpicklist)
+				if trackAndTrace == "" {
+					log.Printf("Failed to get track and trace for shipment %s: %v", shipment.Trackingcode, err)
 					break
 				}
 
-				if trackAndTrace != "" {
-					//println("Verify if tracking is already in Ship24 database before continue")
-					res, err := sApi.GetShipmentByTrackingNumber(trackAndTrace)
-					if err != nil {
-						fmt.Println("Error while checking for tracking with id " + trackAndTrace)
-					}
-
-					if (reflect.DeepEqual(res, sApi.Shipment{})) {
-						fmt.Println("Add tracking with track and trace number: " + trackAndTrace)
-						sApi.AddTracker(trackAndTrace,
-							shipment.Trackingcode,
-							picklist.Deliverycountry,
-							picklist.Deliverycountry,
-							picklist.Deliveryzipcode,
-							picklist.Updated,
-							picklist.Reference,
-							picklist.Deliveryname)
-					}
+				//println("Verify if tracking is already in Ship24 database before continue")
+				shipmentRes, err := sApi.GetShipmentByTrackingNumber(trackAndTrace)
+				if err != nil {
+					log.Printf("Error while checking for tracking with id " + trackAndTrace)
+					break
 				}
+
+				if (reflect.DeepEqual(shipmentRes, sApi.Shipment{})) {
+					log.Printf("Add tracking with track and trace number: " + trackAndTrace)
+					sApi.AddTracker(trackAndTrace,
+						shipment.Trackingcode,
+						picklist.Deliverycountry,
+						picklist.Deliverycountry,
+						picklist.Deliveryzipcode,
+						picklist.Updated,
+						picklist.Reference,
+						picklist.Deliveryname)
+				}
+
 			}
 		}
 	}

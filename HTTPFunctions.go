@@ -5,18 +5,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	sApi "main/ship24/api"
 	"net/http"
 )
 
-
 func HTTPSDelivered(w http.ResponseWriter, r *http.Request) {
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Println("Endpoint Hit: GetJsonStatistics")
 
 	mux.RLock()
-	json.NewEncoder(w).Encode(mDelivered)	
+	json.NewEncoder(w).Encode(mDelivered)
 	mux.RUnlock()
 }
 
@@ -27,10 +27,9 @@ func HTTPPending(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: GetJsonStatistics")
 
 	mux.RLock()
-	json.NewEncoder(w).Encode(mPending)	
+	json.NewEncoder(w).Encode(mPending)
 	mux.RUnlock()
 }
-
 
 func HTTPSNotShipped(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -42,14 +41,13 @@ func HTTPSNotShipped(w http.ResponseWriter, r *http.Request) {
 	mux.RUnlock()
 }
 
-
 func HTTPGetCouriers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Println("Endpoint Hit: GetJsonStatistics")
 
 	mux.RLock()
-	json.NewEncoder(w).Encode(mCourier)
+	json.NewEncoder(w).Encode(sApi.Courier)
 	mux.RUnlock()
 }
 
@@ -59,6 +57,6 @@ func HTTPGetCountries(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: GetJsonStatistics")
 
 	mux.RLock()
-	json.NewEncoder(w).Encode(mCourier)
+	json.NewEncoder(w).Encode(sApi.Courier)
 	mux.RUnlock()
 }

@@ -26,6 +26,8 @@ type ShipmentNotShipped struct {
 	DurationInDays  float64 `json:"durationindays"`
 }
 
+/*
+
 type Courier struct {
 	Name    string `json:"name"`
 	Website string `json:"website"`
@@ -37,18 +39,19 @@ type Country struct {
 
 type TrackingStatus struct {
 	Name string `json:"name"`
-}
+}*/
 
 var mDelivered map[int]Shipment
 var mPending map[int]Shipment
 var mNotShipped map[int]ShipmentNotShipped
-var mCountry map[string]Country
-var mCourier map[string]Courier
-var mStatus map[string]TrackingStatus
+
+//var mCountry map[string]Country
+//var mCourier map[string]Courier
+//var mStatus map[string]TrackingStatus
 
 func DaemonTrackingStats(pages int, mux *sync.RWMutex) {
 
-	PrepareData()
+	//PrepareData()
 
 	//mDelivered = make(map[int]Shipment)
 	//mPending = make(map[int]Shipment)
@@ -106,10 +109,10 @@ func GetTrackingStats(pages int, mux *sync.RWMutex) {
 
 								tracking := Shipment{
 									created.Format("02-Jan-2006"),
-									mCountry[picklist.Deliverycountry].Name,
+									sApi.Country[picklist.Deliverycountry].Name,
 									math.Round((trackings.Events[0].Datetime.Sub(created).Hours()/24)*100) / 100,
-									mCourier[trackings.Events[0].CourierCode].Name,
-									mStatus[trackings.Events[0].StatusMilestone].Name,
+									sApi.Courier[trackings.Events[0].CourierCode].Name,
+									sApi.Status[trackings.Events[0].StatusMilestone].Description,
 									trackAndTraceNumber}
 
 								mux.Lock()
@@ -153,12 +156,13 @@ func AddToNotShipped(idpicklist int, created time.Time, country string) {
 
 	notShipped := ShipmentNotShipped{
 		created.Format("02-Jan-2006"),
-		mCountry[country].Name,
+		sApi.Country[country].Name,
 		durationInDays}
 
 	mNotShipped[idpicklist] = notShipped
 }
 
+/*
 func PrepareData() {
 
 	mCountry = make(map[string]Country)
@@ -223,3 +227,4 @@ func PrepareData() {
 	mStatus["info_received"] = TrackingStatus{"Aangemeld bij Vervoeder"}
 	mStatus["failed_attempt"] = TrackingStatus{"Aflevering mislukt"}
 }
+*/
