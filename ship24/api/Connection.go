@@ -46,7 +46,7 @@ func processRequest(resp *http.Response) ([]byte, error) {
 
 func GetShipmentByTrackingNumber(trackingNumber string) (Shipment, error) {
 
-	resp, err := createNewRequest("GET", url+"/public/v1/trackers/search/"+trackingNumber+"/results", nil)
+	resp, err := createNewRequest("GET", baseUrl+"/public/v1/trackers/search/"+trackingNumber+"/results", nil)
 	if err != nil {
 		return Shipment{}, err
 	}
@@ -64,32 +64,29 @@ func GetShipmentByTrackingNumber(trackingNumber string) (Shipment, error) {
 	return shipment, err
 }
 
-func AddTracker(trackingNumber, shipmentReference, originCountryCode, destinationCountryCode, destinationPostCode, shippingDate, orderNumber, recipientName string) {
-
-	date, _ := time.Parse("2006-01-02 15:04:05", shippingDate)
-	dateISO8601 := date.Format("2006-01-02") + "T" + date.Format("15:04:05") + ".000Z"
-
-	// courierCode can only be a list of max 11 items
-	//courierCode := `"dhl","be-post","nl-post","colis-prive","fedex","at-post","ie-post","dpd","dpd-pl","se-post"`
-
-	if destinationCountryCode == "FR" {
-		trackingNumber = trackingNumber + destinationPostCode
-	}
+func createJSONRequest(trackingNumber, shipmentReference, originCountryCode, destinationCountryCode, destinationPostCode, dateISO8601, orderNumber string) []byte {
 
 	var jsonStr = []byte(`{
-    "trackingNumber": "` + trackingNumber + `",
-		"shipmentReference": "` + shipmentReference + `",
-		"originCountryCode": "` + originCountryCode + `",
-		"destinationCountryCode": "` + destinationCountryCode + `",
-		"destinationPostCode": "` + destinationPostCode + `",
-		"courierCode": ["be-post","dhl","nl-post","colis-prive","fedex","at-post","ie-post","dpd","dpd-pl","se-post"],
-		"shippingDate": "` + dateISO8601 + `",
-		"orderNumber": "` + orderNumber + `"
-	}`)
+		"trackingNumber": "` + trackingNumber + `",
+			"shipmentReference": "` + shipmentReference + `",
+			"originCountryCode": "` + originCountryCode + `",
+			"destinationCountryCode": "` + destinationCountryCode + `",
+			"destinationPostCode": "` + destinationPostCode + `",
+			"courierCode": ["be-post"],
+			"shippingDate": "` + dateISO8601 + `",
+			"orderNumber": "` + orderNumber + `"
+		}`)
 
-	req, err := http.NewRequest("POST", "https://api.ship24.com/public/v1/trackers", bytes.NewBuffer(jsonStr))
+	//"courierCode": ["be-post","dhl","nl-post","colis-prive","fedex","at-post","ie-post","dpd","dpd-pl","se-post"],
+
+	return jsonStr
+}
+
+func createPostRequest(json []byte) {
+
+	req, err := http.NewRequest("POST", baseUrl+"/public/v1/trackers", bytes.NewBuffer(json))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer apik_7uZ6XH9ERcnA1qXa7Qe2QB4lnW1X32")
+	req.Header.Add("Authorization", "Bearer "+bearer)
 
 	if err != nil {
 		println("Error creating connection to ship24")
@@ -102,6 +99,27 @@ func AddTracker(trackingNumber, shipmentReference, originCountryCode, destinatio
 		panic(err)
 	}
 	defer resp.Body.Close()
+
+}
+
+func AddTracker(trackingNumber, shipmentReference, originCountryCode, destinationCountryCode, destinationPostCode, shippingDate, orderNumber, recipientName string) {
+
+	date, _ := time.Parse("2006-01-02 15:04:05", shippingDate)
+	dateISO8601 := date.Format("2006-01-02") + "T" + date.Format("15:04:05") + ".000Z"
+
+	// courierCode can only be a list of max 11 items
+	//courierCode := `"dhl","be-post","nl-post","colis-prive","fedex","at-post","ie-post","dpd","dpd-pl","se-post"`
+
+	if destinationCountryCode == "FR" {
+		trackingNumber = trackingNumber + destinationPostCode
+	}
+
+	if destinationCountryCode == "BE" {
+		jsonStr := createJSONRequest(trackingNumber, shipmentReference, originCountryCode, destinationCountryCode, destinationPostCode, dateISO8601, orderNumber)
+		createPostRequest(jsonStr)
+	}
+
+	//jsonStr := createJSONRequest(trackingNumber, shipmentReference, originCountryCode, destinationCountryCode, destinationPostCode, dateISO8601, orderNumber)
 
 	//fmt.Println("response Status:", resp.Status)
 	//fmt.Println("response Headers:", resp.Header)
@@ -149,7 +167,7 @@ func GetTracker(trackerId string) (Tracker, error) {
 
 func GetTrackerResults(trackerId string) (TrackerResults, error) {
 
-	resp, err := createNewRequest("GET", url+"/public/v1/trackers/"+trackerId+"/results", nil)
+	resp, err := createNewRequest("GET", baseUrl+"/public/v1/trackers/"+trackerId+"/results", nil)
 	if err != nil {
 		return TrackerResults{}, err
 	}
