@@ -10,21 +10,20 @@ import (
 	"time"
 )
 
-
-func DaemonShip24(pages int){
+func DaemonShip24(pages int) {
 	ticker := time.NewTicker(120 * time.Second)
 	quit := make(chan struct{})
 
 	for {
 		select {
-		 case <- ticker.C:
+		case <-ticker.C:
 			fmt.Println("Adding latest track and trace numbers to Ship24 API")
-			AddTrackAndTraceToShip24(pages) 
-		 case <- quit:
-				 ticker.Stop()
+			AddTrackAndTraceToShip24(pages)
+		case <-quit:
+			ticker.Stop()
 			return
-		 }
- }
+		}
+	}
 }
 
 func AddTrackAndTraceToShip24(pages int) {
@@ -44,18 +43,23 @@ func AddTrackAndTraceToShip24(pages int) {
 
 			for _, shipment := range shipments {
 
-				trackAndTraceNumber := b2c.GetTrackAndTrace(shipment.Tracktraceurl)
+				trackAndTrace, err := b2c.GetTrackAndTrace(shipment.Tracktraceurl)
 
-				if trackAndTraceNumber != "" {
+				if err != nil || trackAndTrace == "" {
+
+					break
+				}
+
+				if trackAndTrace != "" {
 					//println("Verify if tracking is already in Ship24 database before continue")
-					res, err := sApi.GetShipmentByTrackingNumber(trackAndTraceNumber)
+					res, err := sApi.GetShipmentByTrackingNumber(trackAndTrace)
 					if err != nil {
-						fmt.Println("Error while checking for tracking with id " + trackAndTraceNumber)
+						fmt.Println("Error while checking for tracking with id " + trackAndTrace)
 					}
 
 					if (reflect.DeepEqual(res, sApi.Shipment{})) {
-						fmt.Println("Add tracking with track and trace number: " + trackAndTraceNumber)
-						sApi.AddTracker(trackAndTraceNumber,
+						fmt.Println("Add tracking with track and trace number: " + trackAndTrace)
+						sApi.AddTracker(trackAndTrace,
 							shipment.Trackingcode,
 							picklist.Deliverycountry,
 							picklist.Deliverycountry,
@@ -63,10 +67,7 @@ func AddTrackAndTraceToShip24(pages int) {
 							picklist.Updated,
 							picklist.Reference,
 							picklist.Deliveryname)
-					} 
-					//else {
-				//		println("Track and Trace number already exist in ship24 database: " + shipment.Tracktraceurl)
-				//	}
+					}
 				}
 			}
 		}
@@ -103,7 +104,7 @@ func AddToShip24(pages int) {
 					picklist.Updated,
 					picklist.Reference,
 					picklist.Deliveryname)
-			} 
+			}
 		}
 	}
 }

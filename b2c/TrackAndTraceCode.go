@@ -1,68 +1,72 @@
 package TrackAndTraceCode
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"unicode"
 )
 
+const (
+	trackingStr       string = "Your tracking number: "
+	offsetTrackingStr int    = len(trackingStr)
+	notFoundMsg              = "Not found"
+)
 
-
-func GetTrackAndTrace(website string) string {
-
-	req, err := http.NewRequest("GET", website, nil)
-
+/*
+Scrape the track and trace code from this website https://www.trackyourparcel.eu/
+Return empty string if track and trace could not be found and err if website could not be read
+*/
+func GetTrackAndTrace(website string) (string, error) {
+	websiteBody, err := readWebsiteBody(website)
 	if err != nil {
-		log.Fatal()
+		return "", err
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	str := string(body)
-
-	titleStartIndex := strings.Index(str, `<strong id="text-tracking-number">Your tracking number</strong>`) + 63
-	if titleStartIndex == -1 {
-		fmt.Println("No title element found")
-		panic(err)
+	startIndex := strings.Index(websiteBody, trackingStr)
+	if startIndex == -1 {
+		return "", nil
 	}
 
-	trackAndTraceValue := ""
-
-	for i := titleStartIndex; i < len(str); i++ {
-
-		if IsValidChar(string(str[i])) {
-			trackAndTraceValue += string(str[i])
-		}
-		
-		if string(str[i]) == "<" {
+	var trackAndTraceCode strings.Builder
+	for _, r := range websiteBody[startIndex+offsetTrackingStr:] {
+		if isValidCharForTrackAndTrace(string(r)) {
+			trackAndTraceCode.WriteByte(byte(r))
+		} else {
 			break
 		}
-
 	}
 
-	return trackAndTraceValue
+	return trackAndTraceCode.String(), nil
 }
 
-
-func IsValidChar(s string) bool {
+func isValidCharForTrackAndTrace(s string) bool {
 	for _, r := range s {
-		if unicode.IsLetter(r)   {
-			return true
-		}
-
-		if unicode.IsNumber(r)   {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) {
 			return true
 		}
 	}
 
 	return false
+}
+
+func readWebsiteBody(website string) (string, error) {
+	req, err := http.NewRequest("GET", website, nil)
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }
