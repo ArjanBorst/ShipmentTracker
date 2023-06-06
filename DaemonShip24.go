@@ -12,7 +12,7 @@ import (
 
 const (
 	firstRunPageSize int = 100
-	pageSize         int = 1
+	pageSize         int = 100
 )
 
 type tracker struct {
@@ -50,12 +50,40 @@ func getTrackAndTrace(url string, idpicklist int) string {
 	return trackAndTrace
 }
 
+func GetPicklists(page int) (pApi.Picklists, error) {
+	offset := page * pageSize
+	retryAttempts := 3
+	retryDelay := time.Second * 20
+
+	var picklists pApi.Picklists
+	var err error
+
+	for attempt := 1; attempt <= retryAttempts; attempt++ {
+
+		picklists, err = pApi.GetPicklistsByOffset(offset)
+		if err == nil {
+			return picklists, nil
+		}
+
+		message := err.Error()
+		switch message {
+		case "429 Too Many Requests":
+			log.Printf("429 Too Many Requests, retrying after delay...")
+			time.Sleep(retryDelay)
+		default:
+			log.Panic(err)
+		}
+	}
+
+	log.Printf("Retries exhausted, unable to retrieve picklists: %v", err)
+	return nil, err
+}
+
 func AddTrackAndTraceToShip24(pages int) {
 
-	for i := 0; i < pages; i++ {
+	for pageNr := 0; pageNr < pages; pageNr++ {
 
-		offset := i * pageSize
-		picklists, err := pApi.GetPicklistsByOffset(offset)
+		picklists, err := pApi.GetPicklistsByOffset(pageNr)
 		if err != nil {
 			log.Panic()
 		}
@@ -71,12 +99,11 @@ func AddTrackAndTraceToShip24(pages int) {
 
 			for _, shipment := range shipments {
 
-				courierInfo := sApi.Courier{}
-				courierInfo.trackingNumber = getTrackAndTrace(shipment.Tracktraceurl, picklist.Idpicklist)
+				//courierInfo := sApi.Courier{}
+				//courierInfo.trackingNumber = getTrackAndTrace(shipment.Tracktraceurl, picklist.Idpicklist)
 				trackAndTrace := getTrackAndTrace(shipment.Tracktraceurl, picklist.Idpicklist)
 
 				if trackAndTrace == "" {
-					log.Printf("Failed to get track and trace for shipment %s: %v", shipment.Trackingcode, err)
 					break
 				}
 
