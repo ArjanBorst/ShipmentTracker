@@ -40,6 +40,20 @@ func GetTrackAndTrace(website string) (string, error) {
 	return trackAndTraceCode.String(), nil
 }
 
+func GetCourier(website string) (string, error) {
+	websiteBody, err := readWebsiteBody(website)
+	if err != nil {
+		return "", err
+	}
+
+	startIndex := strings.Count(websiteBody, "bpost.be")
+	if startIndex == -1 {
+		return "", nil
+	}
+
+	return "bpost", nil
+}
+
 func isValidCharForTrackAndTrace(s string) bool {
 	for _, r := range s {
 		if unicode.IsLetter(r) || unicode.IsNumber(r) {

@@ -71,7 +71,10 @@ func AddTrackAndTraceToShip24(pages int) {
 
 			for _, shipment := range shipments {
 
+				courierInfo := sApi.Courier{}
+				courierInfo.trackingNumber = getTrackAndTrace(shipment.Tracktraceurl, picklist.Idpicklist)
 				trackAndTrace := getTrackAndTrace(shipment.Tracktraceurl, picklist.Idpicklist)
+
 				if trackAndTrace == "" {
 					log.Printf("Failed to get track and trace for shipment %s: %v", shipment.Trackingcode, err)
 					break

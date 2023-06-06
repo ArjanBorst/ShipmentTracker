@@ -32,25 +32,6 @@ var mux = &sync.RWMutex{}
 // https://pkg.go.dev/container/list
 func main() {
 
-	/*
-		url := "https://api.ship24.com/public/v1/trackers"
-
-		payload := strings.NewReader("{\n  \"trackingNumber\": \"S24DEMO456393\",\n  \"shipmentReference\": \"c6e4fef4-a816-b68f-4024-3b7e4c5a9f81\",\n  \"originCountryCode\": \"CN\",\n  \"destinationCountryCode\": \"US\",\n  \"destinationPostCode\": \"94901\",\n  \"shippingDate\": \"2021-03-01T11:09:00.000Z\",\n  \"courierCode\": [\n    \"us-post\"\n  ],\n  \"courierName\": \"USPS Standard\",\n  \"trackingUrl\": \"https://tools.usps.com/go/TrackConfirmAction?tLabels=S24DEMO456393\",\n  \"orderNumber\": \"DF14R2022\"\n}")
-
-		req, _ := http.NewRequest("POST", url, payload)
-
-		req.Header.Add("Content-Type", "application/json; charset=utf-8")
-		req.Header.Add("Authorization", "Bearer  apik_7uZ6XH9ERcnA1qXa7Qe2QB4lnW1X32")
-
-		res, _ := http.DefaultClient.Do(req)
-
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-
-		fmt.Println(res)
-		fmt.Println(string(body))
-	*/
-
 	start := time.Now()
 	fmt.Println("Starting time is: ", start.String())
 

@@ -1,19 +1,19 @@
 package api
 
 type courier struct {
-	Name     string
-	Location string
+	Name    string
+	Keyword string
 }
 
 var Courier = map[string]courier{
-	"dhl":         {"DHL", ""},
-	"be-post":     {"BPost", ""},
-	"nl-post":     {"PostNL", ""},
-	"colis-prive": {"Colis Prive", ""},
-	"fedex":       {"Fedex", ""},
-	"at-post":     {"AT Post", ""},
+	"dhl":         {"DHL", "dhl"},
+	"be-post":     {"BPost", "bpost"},
+	"nl-post":     {"PostNL", "postnl"},
+	"colis-prive": {"Colis Prive", "colis"},
+	"fedex":       {"Fedex", "fedex"},
+	"at-post":     {"AT Post", "atpost"},
 	"ie-post":     {"IE Post", ""},
-	"dpd":         {"DPD", ""},
+	"dpd":         {"DPD", "dpd"},
 	"dpd-pl":      {"DPD Poland", ""},
 	"se-post":     {"SE Post", ""},
 	"pt-post":     {"CTT", ""},
