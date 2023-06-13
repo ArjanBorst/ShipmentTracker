@@ -39,8 +39,8 @@ func main() {
 	Load()
 	mux.Unlock()
 
-	AddTrackAndTraceToShip24(100)
-	GetTrackingStats(100, mux)
+	AddTrackAndTraceToShip24(5)
+	GetTrackingStats(10, mux)
 
 	// go DaemonShip24(1)
 	//go DaemonTrackingStats(1,mux)
@@ -69,18 +69,3 @@ func main() {
 
 	http.ListenAndServe(":8080", nil)
 }
-
-/*
-for i := 0; i < 5; i++ {
-
-		offset := i * 100
-		picklists, err := pApi.GetPicklistsByOffset(offset)
-		if err != nil {
-			log.Panic()
-		}
-
-		for _, picklist := range picklists {
-
-		}
-	}
-*/

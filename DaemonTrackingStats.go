@@ -26,37 +26,11 @@ type ShipmentNotShipped struct {
 	DurationInDays  float64 `json:"durationindays"`
 }
 
-/*
-
-type Courier struct {
-	Name    string `json:"name"`
-	Website string `json:"website"`
-}
-
-type Country struct {
-	Name string `json:"name"`
-}
-
-type TrackingStatus struct {
-	Name string `json:"name"`
-}*/
-
 var mDelivered map[int]Shipment
 var mPending map[int]Shipment
 var mNotShipped map[int]ShipmentNotShipped
 
-//var mCountry map[string]Country
-//var mCourier map[string]Courier
-//var mStatus map[string]TrackingStatus
-
 func DaemonTrackingStats(pages int, mux *sync.RWMutex) {
-
-	//PrepareData()
-
-	//mDelivered = make(map[int]Shipment)
-	//mPending = make(map[int]Shipment)
-	//mNotShipped = make(map[int]ShipmentNotShipped)
-
 	ticker := time.NewTicker(120 * time.Second)
 	quit := make(chan struct{})
 
